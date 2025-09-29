@@ -1,0 +1,6 @@
+numpy>=1.26
+pandas>=2.2
+scipy>=1.11
+pymc>=5.10
+arviz>=0.17
+pytensor>=2.25
