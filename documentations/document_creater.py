@@ -3,8 +3,8 @@ from docx.shared import Inches
 import os
 
 # Paths
-doc_path = r'y:\Study\repos\adm\anomalyDetection\AnomalyDetection_Pipeline_Documentation_FINAL.docx'
-img_path = r'y:\Study\repos\adm\anomalyDetection\copilot_dev\out_lightweight\diagnostics_plots\pair_account_behavior.png'
+doc_path = r'/anomalyDetection/documentations/AnomalyDetection_Pipeline_Documentation_FINAL.docx'
+img_path = r'/anomalyDetection/copilot_dev/out_lightweight/diagnostics_plots/pair_account_behavior.png'
 
 # Create document
 doc = Document()
