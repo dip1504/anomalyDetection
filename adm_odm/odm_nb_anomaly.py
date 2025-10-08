@@ -14,6 +14,7 @@ import ruptures as rpt
 import matplotlib.pyplot as plt
 from statsmodels.tsa.seasonal import STL
 from sklearn.ensemble import IsolationForest
+import traceback
 try:
     from prophet import Prophet
 except ImportError:
@@ -132,8 +133,14 @@ def main():
     os.makedirs(args.outdir, exist_ok=True)
     df = pd.read_csv(args.input, parse_dates=["insight_date_time"])
     dfw = ensure_weekly_counts(df)
+    # Logging: show how many time series we will process
+    groups = list(dfw.groupby(["insight_type","target_key"]))
+    print(f"Found {len(groups)} (insight_type, target_key) groups to process")
+    if len(groups) > 0:
+        print("First 5 groups:", [g[0] for g in groups[:5]])
     diagnostics = []
-    for (it, tk), g in dfw.groupby(["insight_type","target_key"]):
+    for idx, ((it, tk), g) in enumerate(groups):
+        print(f"\nProcessing {idx+1}/{len(groups)}: {it} - {tk}")
         g, X, y = build_design(g, args.fourier_K)
         try:
             # NB2
@@ -187,6 +194,7 @@ def main():
             plot_path = os.path.join(args.outdir, f"diagnostics_{it}_{tk}_multi.png")
             plt.savefig(plot_path)
             plt.close()
+            print(f"Wrote plot: {plot_path}")
             # Save flags
             out = pd.DataFrame({
                 "insight_type":it,
@@ -211,20 +219,16 @@ def main():
                 "z_roll": z_roll,
                 "is_anom_roll": is_anom_roll
             })
-            out.to_csv(os.path.join(args.outdir, f"flags_{it}_{tk}_multi.csv"), index=False)
+            out_path = os.path.join(args.outdir, f"flags_{it}_{tk}_multi.csv")
+            out.to_csv(out_path, index=False)
+            print(f"Wrote flags: {out_path}")
         except Exception as e:
-            diagnostics.append({"insight_type":it,"target_key":tk,"error":str(e)})
+            tb = traceback.format_exc()
+            print(f"Error processing {it}-{tk}: {e}\n{tb}")
+            diagnostics.append({"insight_type":it,"target_key":tk,"error":str(e),"traceback":tb})
     pd.DataFrame(diagnostics).to_csv(os.path.join(args.outdir, "diagnostics_multi.csv"), index=False)
 
 if __name__ == "__main__":
     main()
-# Requirements for anomaly detection pipeline
-pandas
-numpy
-scipy
-statsmodels
-ruptures
-matplotlib
-python-docx
-prophet
-scikit-learn
+
+# End of script
